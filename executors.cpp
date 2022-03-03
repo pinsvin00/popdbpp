@@ -39,7 +39,6 @@ unsigned int pop_nth(Command * command, unsigned int nth, uint16_t flags) {
     FILE * fr = fopen(db->path, "r");
     FILE * frw = fopen(temp_file, "rb+");
 
-    //copying definition
     char * definition_buffer = malloc(db->definition_end_byte);
     fread(definition_buffer, db->definition_end_byte, 1, fr);
     fwrite(definition_buffer, db->definition_end_byte,1, frw);
