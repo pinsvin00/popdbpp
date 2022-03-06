@@ -34,7 +34,7 @@ namespace SEQL {
         bool is_variable = false;
 
         Fragment() = default;
-        Fragment(std::string &val);
+        Fragment(std::string val);
     };
 
 

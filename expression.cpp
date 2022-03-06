@@ -6,9 +6,9 @@ int oper_prio(std::string oper) {
     return 0;
 }
 
-SEQL::Fragment::Fragment(std::string &val) {
+SEQL::Fragment::Fragment(std::string val) {
     std::vector<std::string> operators  = {"=", "+", "-", "*", "var"};
-    std::vector<int> priorities = {0, 1, 2, 1, 1};
+    std::vector<int> priorities =         { 0,   1,   1,   2,    1};
     auto it = std::find(operators.begin(), operators.end(), val);
     bool is_operator = it != operators.end() ? true : false;
 
@@ -37,49 +37,50 @@ SEQL::Engine::Engine() {
 }
 
 void SEQL::Engine::initalize_operators() {
-    // this->operators["+"] = Operator(2, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
-    //     if(args.size() != 2){
-    //         throw std::invalid_argument("SEQL ERROR : + operator requires 2 arguments");
-    //     }
-    //     if(args[0].type == 0) {
-    //         throw std::invalid_argument("SEQL ERROR : + operator cannot perform operations on type NONE");
-    //     }
-    //     if(args[0].type != args[1].type) {
-    //         throw std::invalid_argument("SEQL ERROR : + operator cannot perform addition on 2 different types.");
-    //     } 
-    //     return Fragment(std::to_string( std::stoi(args[0].value) + std::stoi(args[1].value) ));
-    // });
-    // this->operators["-"] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
-    //     if(args.size() != 2){
-    //         throw std::invalid_argument("SEQL ERROR : - operator requires 2 arguments");
-    //     }
-    //     if(args[0].type == 0) {
-    //         throw std::invalid_argument("SEQL ERROR : - operator cannot perform operations on type NONE");
-    //     }
-    //     if(args[0].type != args[1].type) {
-    //         throw std::invalid_argument("SEQL ERROR : - operator cannot perform addition on 2 different types.");
-    //     } 
+    this->operators["+"] = Operator(2, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+        // if(args.size() != 2){
+        //     throw std::invalid_argument("SEQL ERROR : + operator requires 2 arguments");
+        // }
+        // if(args[0].type == 0) {
+        //     throw std::invalid_argument("SEQL ERROR : + operator cannot perform operations on type NONE");
+        // }
+        if(args[0].type != args[1].type) {
+            throw std::invalid_argument("SEQL ERROR : + operator cannot perform addition on 2 different types.");
+        }
+
+        return Fragment(std::to_string( std::stoi(args[0].value) + std::stoi(args[1].value) ));
+    });
+    this->operators["-"] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
+        if(args.size() != 2){
+            throw std::invalid_argument("SEQL ERROR : - operator requires 2 arguments");
+        }
+        if(args[0].type == 0) {
+            throw std::invalid_argument("SEQL ERROR : - operator cannot perform operations on type NONE");
+        }
+        if(args[0].type != args[1].type) {
+            throw std::invalid_argument("SEQL ERROR : - operator cannot perform addition on 2 different types.");
+        } 
 
 
-    //     return Fragment(std::to_string( std::stoi(args[0].value) - std::stoi(args[1].value) ));
-    // });
-    // this->operators["var"] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
-    //     if(args.size() != 1){
-    //         throw std::invalid_argument("SEQL ERROR : = operator requires 2 arguments");
-    //     }
-    //     vars[args[0].value] = Variable();          
-    //     return Fragment(std::string(""));
-    // });
+        return Fragment(std::to_string( std::stoi(args[0].value) - std::stoi(args[1].value) ));
+    });
+    this->operators["var"] = Operator(1, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
+        if(args.size() != 1){
+            throw std::invalid_argument("SEQL ERROR : = operator requires 2 arguments");
+        }
+        vars[args[0].value] = Variable();          
+        return Fragment(args[0].value);
+    });
 
-    // this->operators["="] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
-    //     if(args.size() != 2){
-    //         throw std::invalid_argument("SEQL ERROR : = operator requires 2 arguments");
-    //     }
-    //     vars[args[0].value].value = args[1].value;
-    //     vars[args[0].value].type  = args[1].type;
+    this->operators["="] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
+        if(args.size() != 2){
+            throw std::invalid_argument("SEQL ERROR : = operator requires 2 arguments");
+        }
+        vars[args[1].value].value = args[0].value;
+        vars[args[1].value].type  = args[0].type;
 
-    //     return Fragment(s"");
-    // });
+        return Fragment(std::string(""));
+    });
 }
 
 
@@ -107,10 +108,24 @@ void SEQL::Engine::evaluate_expression(const std::string& command) {
     Expression e = Expression(current_fragments);
     e.convert_to_rpn();
 
-    //should we convert to rpn on demand or during call of evaluate?
     std::stack<Fragment> stack;
+    std::vector<Fragment> output;
     for(auto element : e.fragments) {
+        if(element.is_operator) {
+            Operator o = this->operators[element.value];
+
+            std::vector<Fragment> args;
+            for (size_t i = 0; i < o.argument_count; i++){
+                args.push_back(stack.top());
+                stack.pop();
+            }
         
+            Fragment f = o.executor(args, this->variables);
+            stack.push(f);
+        }
+        else {
+            stack.push(element);
+        }
     }
 
 
@@ -130,11 +145,12 @@ void SEQL::Expression::convert_to_rpn() {
             stack.push_back(f);
         }
         else if(f.value == ")") {
-            while(stack.back().value != ")") {
+            while(stack.back().value != "(") {
                 Fragment p = stack[stack.size() - 1]; 
                 stack.pop_back();
                 output.push_back(p);
             }
+            stack.pop_back();
         }
         else if(f.is_operator) {
             while(!stack.empty()){
