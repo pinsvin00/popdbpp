@@ -4,15 +4,23 @@
 #include <vector>
 #include "utils.hpp"
 #include <cstring>
-#include <cstdio>
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include <string>
 #include <iomanip>
 #include <utility>
 
 
 namespace Base {
+    class Field {
+    public:
+        std::string raw_field;
+        std::string name;
+        std::vector<std::string> parameters;
+        Field(std::string field_raw);
+    };
+
     class Info {
     public:
         std::string name;
@@ -33,14 +41,7 @@ namespace Base {
         void load();
     };
 
-    class Field {
-    public:
-        std::string raw_field;
-        std::string name;
-        std::vector<std::string> parameters;
 
-        Field(std::string field_raw);
-    };
 
     class RecordField : public Field {
     public:
@@ -85,6 +86,7 @@ namespace Base {
 
             Info load();
             void process_line(std::string line);
+            void read_field(std::string field_line);
             Info current_info;
             void mutate_stream(std::string markup_name, bool terminating) {
                 int nth_bit = 0;
@@ -95,16 +97,14 @@ namespace Base {
                     nth_bit = FIELDS_READING_BIT;
                 }
 
-                if(terminating) 
+                if(terminating) {
                     CLR_BIT(this->stream_controller, nth_bit);
-                else
+                }
+                else {
                     SET_BIT(this->stream_controller, nth_bit);
+                }
+                return;
             }
-            void read_field(std:string field_line);
-
-
-
-
             Reader() {
                 this->stream_controller = 0;
             }  
