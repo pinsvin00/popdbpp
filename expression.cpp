@@ -7,18 +7,29 @@ int oper_prio(std::string oper) {
 }
 
 SEQL::Fragment::Fragment(std::string val) {
-    std::vector<std::string> operators  = {"=", "+", "-", "*", "var"};
-    std::vector<int> priorities =         { 0,   1,   1,   2,    1};
-    auto it = std::find(operators.begin(), operators.end(), val);
-    bool is_operator = it != operators.end() ? true : false;
+    std::map<std::string, int> operator_priority = {
+        {"=", 0} , {"+", 1}, {"-", 1}, {"*", 2}, {"var", 1},
+    };
 
-    if(is_operator) {
-        this->is_operator = true;
+    std::map<std::string, int> keyword_priority = {
+        {"function", 0}
+    };
+
+    if(operator_priority.count(val)) {
         this->type  = OPERATOR;
         this->value = val;
-        this->prio  = priorities.at(it - operators.begin()); 
+        this->prio  = operator_priority[val]; 
         return;
     }
+
+    if(keyword_priority.count(val)) {
+        this->type = KEYWORD;
+        this->value = val;
+        this->prio = keyword_priority[val];
+        return;
+    }
+
+
     
     if(val[0] == '\"' || isdigit(val[0]) ) {
         this->type = LITERAL;
@@ -31,12 +42,47 @@ SEQL::Fragment::Fragment(std::string val) {
     return;
 }
 
-
+//TODO brakuje troche jakies lepszej definicji priorytetu keyworda, czy operatora 
 SEQL::Engine::Engine() {
-    this->initalize_operators();
+    this->initialize_operators();
 }
 
-void SEQL::Engine::initalize_operators() {
+SEQL::Keyword::Keyword(int arg_c, std::function<Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&)> executor)  {
+    this->type = KEYWORD;
+    this->executor = executor;
+    this->arg_c = arg_c;
+}
+
+
+void SEQL::Engine::initialize_keywords() {
+    this->keywords["function"] = Keyword(-1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+
+        Function v  = Function();
+        v.is_function = true;
+        vars[args[0].value] = v;
+
+
+
+        Fragment f = Fragment(args[0].value);
+        f.type = FUNCTION;
+
+        return f;
+    });
+
+    
+    this->keywords["var"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+        //jedno argumentowiec : (
+        if(args.size() != 1){
+            throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
+        }
+        vars[args[0].value] = Variable();          
+        return Fragment(args[0].value);
+    });
+
+
+}
+
+void SEQL::Engine::initialize_operators() {
     this->operators["+"] = Operator(2, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
         // if(args.size() != 2){
         //     throw std::invalid_argument("SEQL ERROR : + operator requires 2 arguments");
@@ -64,14 +110,6 @@ void SEQL::Engine::initalize_operators() {
 
         return Fragment(std::to_string( std::stoi(args[0].value) - std::stoi(args[1].value) ));
     });
-    this->operators["var"] = Operator(1, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
-        if(args.size() != 1){
-            throw std::invalid_argument("SEQL ERROR : = operator requires 2 arguments");
-        }
-        vars[args[0].value] = Variable();          
-        return Fragment(args[0].value);
-    });
-
     this->operators["="] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
         if(args.size() != 2){
             throw std::invalid_argument("SEQL ERROR : = operator requires 2 arguments");
@@ -111,7 +149,7 @@ void SEQL::Engine::evaluate_expression(const std::string& command) {
     std::stack<Fragment> stack;
     std::vector<Fragment> output;
     for(auto element : e.fragments) {
-        if(element.is_operator) {
+        if(element.type == OPERATOR) {
             Operator o = this->operators[element.value];
 
             std::vector<Fragment> args;
@@ -152,7 +190,7 @@ void SEQL::Expression::convert_to_rpn() {
             }
             stack.pop_back();
         }
-        else if(f.is_operator) {
+        else if(f.type == OPERATOR || f.type == KEYWORD) {
             while(!stack.empty()){
                 if (f.prio > stack.back().prio) break;
                 output.push_back(stack.back());

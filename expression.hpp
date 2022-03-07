@@ -10,18 +10,19 @@
 #include "db_info.hpp"
 #include "opcodes.hpp"
 
+void test () int a;
 
 namespace SEQL {
     enum CommandIdParserError {
         INVALID_COMMAND_TYPE = 1,
     };
 
-
     enum FragmentType {
         LITERAL,
         OPERATOR,
         VARIABLE,
-        DATABASE,
+        KEYWORD,
+        FUNCTION,
     };
 
     class Fragment {
@@ -30,22 +31,31 @@ namespace SEQL {
         std::string value;
         int prio;
 
-        bool is_operator = false;
-        bool is_variable = false;
-
         Fragment() = default;
         Fragment(std::string val);
     };
-
 
     class Variable {
         public:
 
         int type;
-        bool is_callable;
+        bool is_function;
         bool has_native_code;
         std::string value;
         std::string name;
+    };
+
+    typedef std::function< Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&) > Executor;
+
+
+
+
+
+    class Function : public Variable { 
+        std::vector<Fragment> argument_pattern;
+
+        //jak ogarnac wywolywanie funkcji?
+        //jakis reader,   
     };
 
 
@@ -76,23 +86,35 @@ namespace SEQL {
         int argument_count = 0;
 
         //TODO instead of passing whole engine, lets just pass some fragment of engine that contains needed data
-        std::function<Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&)> executor;
+        Executor executor;
         Operator() = default;
-        Operator(int arg_c, std::function<Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&)> executor) {
-            this->is_operator = true;
+        Operator(int arg_c, Executor executor) {
             this->executor = executor;
+            this->type = OPERATOR;
             this->argument_count = arg_c;
         }         
     };
 
+    class Keyword : public Fragment {
+        public:
+
+        Executor executor;
+        int arg_c;
+        Keyword() = default;
+        Keyword(int arg_c, Executor executor);
+    };
+
+
 
     class Engine {
         std::map<std::string, Variable> variables;
+        std::map<std::string, Keyword> keywords;
         std::map<std::string, Operator> operators;
     public:
         Engine();
         void evaluate_expression(const std::string& command);
-        void initalize_operators();
+        void initialize_keywords();
+        void initialize_operators();
     };
 
 }

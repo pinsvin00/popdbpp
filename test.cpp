@@ -48,7 +48,6 @@ int main( )
                  break;
       case ')' : while( S [ sptr-1 ] != '(' ) // nawias zamykający
                  cout << S [ --sptr ] << ' '; // ze stosu przesyłamy na wyjście
-                                   // wszystkie operatory aż do nawiasu otw.
                  sptr--;           // usuwamy ze stosu nawias otwierający
                  break;
       case '+' : ;                 // operator
