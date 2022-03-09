@@ -10,8 +10,6 @@
 #include "db_info.hpp"
 #include "opcodes.hpp"
 
-void test () int a;
-
 namespace SEQL {
     enum CommandIdParserError {
         INVALID_COMMAND_TYPE = 1,
@@ -47,15 +45,11 @@ namespace SEQL {
 
     typedef std::function< Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&) > Executor;
 
-
-
-
-
-    class Function : public Variable { 
+    class Function : public Variable {
+        public:
         std::vector<Fragment> argument_pattern;
-
         //jak ogarnac wywolywanie funkcji?
-        //jakis reader,   
+        //jakis reader, imo
     };
 
 

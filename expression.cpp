@@ -8,11 +8,11 @@ int oper_prio(std::string oper) {
 
 SEQL::Fragment::Fragment(std::string val) {
     std::map<std::string, int> operator_priority = {
-        {"=", 0} , {"+", 1}, {"-", 1}, {"*", 2}, {"var", 1},
+        {"=", 0} , {"+", 1}, {"-", 1}, {"*", 2}, {"{", 0},
     };
 
     std::map<std::string, int> keyword_priority = {
-        {"function", 0}
+        {"function", 1}, {"var", 1}
     };
 
     if(operator_priority.count(val)) {
@@ -59,10 +59,13 @@ void SEQL::Engine::initialize_keywords() {
 
         Function v  = Function();
         v.is_function = true;
+
         vars[args[0].value] = v;
-
-
-
+        for (size_t i = 1; i < args.size() ; i++){
+            if(args[i].type != VARIABLE) break;
+            else v.argument_pattern.push_back(args[i]);
+        }
+        
         Fragment f = Fragment(args[0].value);
         f.type = FUNCTION;
 
@@ -79,6 +82,24 @@ void SEQL::Engine::initialize_keywords() {
         return Fragment(args[0].value);
     });
 
+    this->keywords["if"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+        //jedno argumentowiec : (
+        if(args.size() != 1){
+            throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
+        }
+        vars[args[0].value] = Variable();          
+        return Fragment(args[0].value);
+    });
+
+
+    this->keywords["for"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+        //jedno argumentowiec : (
+        if(args.size() != 1){
+            throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
+        }
+        vars[args[0].value] = Variable();          
+        return Fragment(args[0].value);
+    });
 
 }
 
@@ -116,6 +137,15 @@ void SEQL::Engine::initialize_operators() {
         }
         vars[args[1].value].value = args[0].value;
         vars[args[1].value].type  = args[0].type;
+
+        return Fragment(std::string(""));
+    });
+
+
+    this->operators["{"] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
+        if(args.size() != 1){
+            throw std::invalid_argument("SEQL ERROR : { expected statement");
+        }
 
         return Fragment(std::string(""));
     });
