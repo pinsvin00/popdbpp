@@ -43,8 +43,9 @@ SEQL::Fragment::Fragment(std::string val) {
 }
 
 //TODO brakuje troche jakies lepszej definicji priorytetu keyworda, czy operatora 
-SEQL::Engine::Engine() {
+SEQL::Engine::Engine(std::function<void(Base::Event)> event_dispatch) {
     this->initialize_operators();
+    this->event_dispatch = event_dispatch;
 }
 
 SEQL::Keyword::Keyword(int arg_c, std::function<Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&)> executor)  {
@@ -55,8 +56,7 @@ SEQL::Keyword::Keyword(int arg_c, std::function<Fragment(const std::vector<Fragm
 
 
 void SEQL::Engine::initialize_keywords() {
-    this->keywords["function"] = Keyword(-1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
-
+    this->keywords["FUN"] = Keyword(-1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
         Function v  = Function();
         v.is_function = true;
 
@@ -73,7 +73,7 @@ void SEQL::Engine::initialize_keywords() {
     });
 
     
-    this->keywords["var"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+    this->keywords["VAR"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
         //jedno argumentowiec : (
         if(args.size() != 1){
             throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
@@ -82,7 +82,7 @@ void SEQL::Engine::initialize_keywords() {
         return Fragment(args[0].value);
     });
 
-    this->keywords["if"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+    this->keywords["IF"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
         //jedno argumentowiec : (
         if(args.size() != 1){
             throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
@@ -92,7 +92,7 @@ void SEQL::Engine::initialize_keywords() {
     });
 
 
-    this->keywords["for"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+    this->keywords["FOR"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
         //jedno argumentowiec : (
         if(args.size() != 1){
             throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
@@ -181,7 +181,6 @@ void SEQL::Engine::evaluate_expression(const std::string& command) {
     for(auto element : e.fragments) {
         if(element.type == OPERATOR) {
             Operator o = this->operators[element.value];
-
             std::vector<Fragment> args;
             for (size_t i = 0; i < o.argument_count; i++){
                 args.push_back(stack.top());
@@ -203,7 +202,6 @@ SEQL::Expression::Expression(std::vector<Fragment> fragments) {
 }
 
 void SEQL::Expression::convert_to_rpn() {
-    //this->expression_fragments = {};
     std::vector<Fragment> stack;
     std::vector<Fragment> output;
     while( this->fragments.size() != 0 )  {

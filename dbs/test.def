@@ -1,0 +1,9 @@
+;;DEFINITION;;
+    NAME:test
+    MODE:memory
+    ;;FIELDS;;
+        ID:CHARFIELD 8
+        DATE:CHARFIELD 64
+        MESSAGE:CHARFIELD 64
+    ;;END_FIELDS;;
+;;END_DEFINITION;;

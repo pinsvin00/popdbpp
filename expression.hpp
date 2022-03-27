@@ -7,7 +7,7 @@
 #include <vector>
 #include <stack>
 
-#include "db_info.hpp"
+#include "base_common.hpp"
 #include "opcodes.hpp"
 
 namespace SEQL {
@@ -45,19 +45,19 @@ namespace SEQL {
 
     typedef std::function< Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&) > Executor;
 
+    // TODO Silnik jezyka -> Wyslanie ekspresji w formie KOD_WYWOLANIA_CALLBACKA : ARGUMENTY
+    //  
+
     class Function : public Variable {
         public:
         std::vector<Fragment> argument_pattern;
-        //jak ogarnac wywolywanie funkcji?
-        //jakis reader, imo
     };
 
+    class NativeFunction : public Function {
+        Base::NativeFunctionCode code;
+        
+    }
 
-    class PredefinedFunction : Variable {
-        std::function<void(std::vector<std::string>)> executor;
-        PredefinedFunction();
-
-    };
 
     class Expression {
         public:
@@ -104,8 +104,9 @@ namespace SEQL {
         std::map<std::string, Variable> variables;
         std::map<std::string, Keyword> keywords;
         std::map<std::string, Operator> operators;
+        std::function<void(Base::Event)> event_dispatch;
     public:
-        Engine();
+        Engine(std::function<void(Base::Event)> dispatch);
         void evaluate_expression(const std::string& command);
         void initialize_keywords();
         void initialize_operators();
