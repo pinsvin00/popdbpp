@@ -4,6 +4,7 @@
 #include <sstream>
 #include "expression.hpp"
 #include "base_reader.hpp"
+#include "base_controller.hpp"
 #include "base.hpp"
 
 using namespace std;
@@ -12,15 +13,14 @@ using namespace std;
 int main() {
 
     Base::Reader reader = Base::Reader("dbs/test.def");
+    vector<byte> chuj;
     std::shared_ptr<Base::Info> base_information = make_shared<Base::Info>(reader.load());
-    Base::Engine base_engine = Base::Engine(base_information, Base::EngineMode::FILE);
+    std::shared_ptr<Base::Engine> base_engine = std::make_shared<Base::Engine>(Base::Engine(base_information, Base::EngineMode::FILE));
+    std::shared_ptr<SEQL::Engine> seql_engine = std::make_shared<SEQL::Engine>();
 
-    //jak przekazywac eventy do silnika z SEQLa?
-    //seql_engine.evaluate_expression("INSERT_BEGIN test ID = '1' DATE = '2022-27-03' MESSAGE = 'Hello World';");
-
-    std::shared_ptr<Base::Record> record = make_shared<Base::Record>(); 
-    base_engine.insert_begin(record);
-
+    //todo some facade of interaction ? :thinking:
+    seql_engine->base_engine = base_engine;
+    seql_engine->evaluate_expression("INSERT_BEGIN test 1 2022-27-03 HelloWorld");
 
 
     // ifstream myfile ("test.pop");

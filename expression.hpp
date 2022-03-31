@@ -6,9 +6,8 @@
 #include <algorithm>
 #include <vector>
 #include <stack>
-
 #include "base_common.hpp"
-#include "opcodes.hpp"
+#include "base.hpp"
 
 namespace SEQL {
     enum CommandIdParserError {
@@ -21,16 +20,7 @@ namespace SEQL {
         VARIABLE,
         KEYWORD,
         FUNCTION,
-    };
-
-    class Fragment {
-        public:
-        int type;
-        std::string value;
-        int prio;
-
-        Fragment() = default;
-        Fragment(std::string val);
+        NATIVE_FUNCTION,
     };
 
     class Variable {
@@ -44,19 +34,14 @@ namespace SEQL {
     };
 
     typedef std::function< Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&) > Executor;
-
-    // TODO Silnik jezyka -> Wyslanie ekspresji w formie KOD_WYWOLANIA_CALLBACKA : ARGUMENTY
-    //  
-
     class Function : public Variable {
         public:
         std::vector<Fragment> argument_pattern;
     };
 
     class NativeFunction : public Function {
-        Base::NativeFunctionCode code;
-        
-    }
+        Base::NativeFunctionIdentifier code;  
+    };
 
 
     class Expression {
@@ -104,9 +89,9 @@ namespace SEQL {
         std::map<std::string, Variable> variables;
         std::map<std::string, Keyword> keywords;
         std::map<std::string, Operator> operators;
-        std::function<void(Base::Event)> event_dispatch;
     public:
-        Engine(std::function<void(Base::Event)> dispatch);
+        Engine() = default;
+        std::shared_ptr<Base::Engine> base_engine;
         void evaluate_expression(const std::string& command);
         void initialize_keywords();
         void initialize_operators();

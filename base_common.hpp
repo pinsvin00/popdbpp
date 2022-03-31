@@ -1,6 +1,13 @@
 
+#ifndef BASE_COMMON_H
+#define BASE_COMMON_H
+
 #include <iostream>
 #include <vector>
+#include <map>
+#include <memory>
+#include "expression_common.hpp"
+#include "function_registry.hpp"
 
 namespace Base {
     class Field {
@@ -9,7 +16,9 @@ namespace Base {
         std::string name;
         std::vector<std::string> parameters;
         Field(std::string field_raw);
-    };
+    };    
+
+
 
     class Info {
     public:
@@ -33,17 +42,8 @@ namespace Base {
         void load();
     };
 
-
-    class RecordDefinition {
-        public:
-        std::vector<RecordField> record_fields;
-        size_t size;
-    };
-
-
-
     class RecordField : public Field {
-    public:
+        public:
         unsigned int size;
         unsigned int nth;
         unsigned int offset;
@@ -71,29 +71,44 @@ namespace Base {
 
         }
     };
+    
+    class RecordDefinition {
+        public:
+        std::vector<RecordField> record_fields;
+        size_t size;
+    };
+    
+
+    class Record {
+        public:
+        std::shared_ptr<RecordDefinition> definition;
+        std::vector<char> data;
+    };
+
+    
+
 
     enum EventType {
         InvokeFunction,
     };
 
-    enum NativeFunctionCode {
-        INSERT_BEGIN,
-        INSERT,
-        SELECT,
-        POP,
-        POP_NTH,
-        DELETE_NTH,
-    };
-
-    class Event{
+    class Event {
         public:
-        std::vector<std::string> arguments;
+        std::vector<SEQL::Fragment> arguments;
         EventType type;
+        NativeFunctionIdentifier function_identifier = INSERT_BEGIN;
     };
 
     class FunctionDispatchEvent : public Event {
         public:
-        NativeFunctionCode code;
+        NativeFunctionIdentifier code;
+        FunctionDispatchEvent(std::string function_name, std::vector<SEQL::Fragment> args) {
+            this->code = Base::NativeFunctionIdentifier::INSERT_BEGIN;
+            this->arguments = args;
+            this->type = EventType::InvokeFunction;
+        }
     };
 
 }
+
+#endif

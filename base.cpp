@@ -26,7 +26,7 @@ Base::Record Base::Engine::pop_record() {
     }
 
     Record record = Record();
-    record.data = std::vector<std::byte>(popped_record.begin(), popped_record.end());
+    //record.data = std::vector<char>(popped_record.begin(), popped_record.end());
     record.definition = std::make_shared<RecordDefinition>();
     
     temp_file.close();

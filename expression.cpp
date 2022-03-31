@@ -12,7 +12,11 @@ SEQL::Fragment::Fragment(std::string val) {
     };
 
     std::map<std::string, int> keyword_priority = {
-        {"function", 1}, {"var", 1}
+        {"FUN", 1}, {"VAR", 1}
+    };
+
+    std::map<std::string, int> native_func_priority = {
+        {"INSERT_BEGIN", 1},
     };
 
     if(operator_priority.count(val)) {
@@ -29,6 +33,13 @@ SEQL::Fragment::Fragment(std::string val) {
         return;
     }
 
+    if(native_func_priority.count(val)) {
+        this->type = NATIVE_FUNCTION;
+        this->value = val;
+        this->prio = native_func_priority[val];
+        return;
+    }
+
 
     
     if(val[0] == '\"' || isdigit(val[0]) ) {
@@ -37,15 +48,9 @@ SEQL::Fragment::Fragment(std::string val) {
         return;
     }
 
-    this->type = VARIABLE;
+    this->type = LITERAL;
     this->value = val;
     return;
-}
-
-//TODO brakuje troche jakies lepszej definicji priorytetu keyworda, czy operatora 
-SEQL::Engine::Engine(std::function<void(Base::Event)> event_dispatch) {
-    this->initialize_operators();
-    this->event_dispatch = event_dispatch;
 }
 
 SEQL::Keyword::Keyword(int arg_c, std::function<Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&)> executor)  {
@@ -153,7 +158,6 @@ void SEQL::Engine::initialize_operators() {
 
 
 void SEQL::Engine::evaluate_expression(const std::string& command) {
-    //std::cout << command << std::endl;
     std::vector<Fragment> current_fragments;
     std::string fragment_buffer = "";
 
@@ -190,6 +194,20 @@ void SEQL::Engine::evaluate_expression(const std::string& command) {
             Fragment f = o.executor(args, this->variables);
             stack.push(f);
         }
+        if(element.type == NATIVE_FUNCTION) {
+            std::vector<Fragment> strings;
+            while(!stack.empty() ) {
+                //that may be quite problematic, we should limit to taking n arguments
+                strings.push_back(stack.top());
+                stack.pop();
+            }
+            std::reverse(strings.begin(), strings.end());
+            Base::Event event;
+            event.arguments = strings;
+            event.type = Base::EventType::InvokeFunction;
+            this->base_engine->entry(event);
+            //this->event_dispatch->invoke()
+        }
         else {
             stack.push(element);
         }
@@ -218,7 +236,7 @@ void SEQL::Expression::convert_to_rpn() {
             }
             stack.pop_back();
         }
-        else if(f.type == OPERATOR || f.type == KEYWORD) {
+        else if(f.type == OPERATOR || f.type == KEYWORD || f.type == NATIVE_FUNCTION) {
             while(!stack.empty()){
                 if (f.prio > stack.back().prio) break;
                 output.push_back(stack.back());

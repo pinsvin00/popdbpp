@@ -35,7 +35,7 @@ Base::Info Base::Reader::load() {
     fs.open(this->definition_path.c_str(), std::fstream::in | std::fstream::out | std::fstream::app);
     if(!fs.is_open()) {
         std::cout << "ERR! Failed to open database!" << std::endl;
-        return;
+        return this->current_info;
     }
     std::string buffer;
     while( getline(fs, buffer) ) {

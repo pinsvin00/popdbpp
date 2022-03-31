@@ -1,8 +1,7 @@
-#ifndef DB_INFO_H
-#define DB_INFO_H
+#ifndef DB_READER
+#define DB_READER
 
 #include <vector>
-#include "utils.hpp"
 #include <cstring>
 #include <iostream>
 #include <fstream>
@@ -10,6 +9,8 @@
 #include <string>
 #include <iomanip>
 #include <utility>
+
+#include "utils.hpp"
 #include "base_common.hpp"
 
 namespace Base {

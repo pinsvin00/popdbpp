@@ -1,22 +1,19 @@
+#ifndef BASE_H
+#define BASE_H
+
 #include <iostream>
 #include <vector>
 #include <memory>
 #include <fstream>
 #include <queue>
 #include "base_common.hpp"
+#include "record_constructor.hpp"
 
 namespace Base {
     enum EngineMode {
         MEMORY, 
         FILE,
     };
-
-    class Record {
-        public:
-        std::shared_ptr<RecordDefinition> definition;
-        std::vector<std::byte> data;
-    };
-
     class Engine {
         std::shared_ptr<Base::Info> base_info;
         EngineMode mode;
@@ -29,6 +26,15 @@ namespace Base {
                 this->base_file_path = this->base_info->data_path.c_str();
                 this->temp_file_path = (this->base_info->data_path + "temp").c_str();
             };
+
+            void entry(Event evnt) {
+                Base::RecordConstructor constructor;
+                std::shared_ptr<Record> record = std::make_shared<Record>(constructor.construct(evnt.arguments));
+                if(evnt.function_identifier == INSERT_BEGIN) {
+                    this->insert_begin(record);
+                }
+            }
+
 
             Engine(std::shared_ptr<Base::Info> base_info, EngineMode mode) {
                 this->base_info = base_info;
@@ -60,3 +66,5 @@ namespace Base {
 
     };
 }
+
+#endif
