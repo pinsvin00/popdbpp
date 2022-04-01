@@ -8,40 +8,20 @@
 #include <memory>
 #include "expression_common.hpp"
 #include "function_registry.hpp"
-
 namespace Base {
+
+    const std::string CHARFIELD = "CHARFIELD";
+    const std::string INT = "INT";
+    const std::string DATE = "DATE";
+    const std::string BIGINT = "BIGINT";
+
     class Field {
     public:
         std::string raw_field;
         std::string name;
         std::vector<std::string> parameters;
         Field(std::string field_raw);
-    };    
-
-
-
-    class Info {
-    public:
-        std::string name;
-        std::string definition_path;
-        std::string data_path;
-        std::vector<Field> fields;
-        std::vector<Field> options;
-        
-        bool is_busy;
-        int record_size;
-        int definition_end_byte;
-        unsigned long long int record_count;
-
-        Info(std::string name, std::string definition_path) {
-            this->name = name;
-            this->definition_path = definition_path;
-        }
-        Info() = default;
-
-        void load();
     };
-
     class RecordField : public Field {
         public:
         unsigned int size;
@@ -71,17 +51,44 @@ namespace Base {
 
         }
     };
-    
+
     class RecordDefinition {
         public:
-        std::vector<RecordField> record_fields;
-        size_t size;
+        std::vector<RecordField> fields;
+        size_t size = 0;
     };
+
+
+    class Info {
+    public:
+        std::string name;
+        std::string definition_path;
+        std::string data_path;
+        Base::RecordDefinition record_definition;
+        std::vector<Field> options;
+        
+        bool is_busy;
+        int record_size;
+        int definition_end_byte;
+        unsigned long long int record_count;
+
+        Info(std::string name, std::string definition_path, Base::RecordDefinition record_definition) {
+            this->name = name;
+            this->definition_path = definition_path;
+            this->record_definition = record_definition;
+        }
+        Info() = default;
+
+        void load();
+    };
+
+
     
 
     class Record {
         public:
-        std::shared_ptr<RecordDefinition> definition;
+        //we should move record definition to the shared_ptr, definetaly
+        RecordDefinition definition;
         std::vector<char> data;
     };
 

@@ -10,17 +10,30 @@
 using namespace std;
 
 
+/*
+Current issues
+-> Statically assigned identifier of function
+-> Non implemented in memory base
+-> Validation of given records, type checking
+-> NULL Value
+-> Named parameters
+-> Multiple databases
+
+-> Non extensible base event class
+*/
+
+
+
 int main() {
 
     Base::Reader reader = Base::Reader("dbs/test.def");
-    vector<byte> chuj;
     std::shared_ptr<Base::Info> base_information = make_shared<Base::Info>(reader.load());
     std::shared_ptr<Base::Engine> base_engine = std::make_shared<Base::Engine>(Base::Engine(base_information, Base::EngineMode::FILE));
+    
     std::shared_ptr<SEQL::Engine> seql_engine = std::make_shared<SEQL::Engine>();
 
-    //todo some facade of interaction ? :thinking:
     seql_engine->base_engine = base_engine;
-    seql_engine->evaluate_expression("INSERT_BEGIN test 1 2022-27-03 HelloWorld");
+    seql_engine->evaluate_expression("INSERT_BEGIN test \"4\" \"2022-01-04\" \"Macieksmierdzigownem\"");
 
 
     // ifstream myfile ("test.pop");

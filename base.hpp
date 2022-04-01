@@ -15,7 +15,7 @@ namespace Base {
         FILE,
     };
     class Engine {
-        std::shared_ptr<Base::Info> base_info;
+        std::shared_ptr<Base::Info> info;
         EngineMode mode;
 
         std::string temp_file_path;
@@ -23,22 +23,25 @@ namespace Base {
 
         public:
             Engine() {
-                this->base_file_path = this->base_info->data_path.c_str();
-                this->temp_file_path = (this->base_info->data_path + "temp").c_str();
+                this->base_file_path = this->info->data_path.c_str();
+                this->temp_file_path = (this->info->data_path + "temp").c_str();
             };
 
             void entry(Event evnt) {
                 Base::RecordConstructor constructor;
-                std::shared_ptr<Record> record = std::make_shared<Record>(constructor.construct(evnt.arguments));
+                std::shared_ptr<Record> record = std::make_shared<Record>(constructor.construct( this->info->record_definition, evnt.arguments));
                 if(evnt.function_identifier == INSERT_BEGIN) {
                     this->insert_begin(record);
                 }
             }
 
 
-            Engine(std::shared_ptr<Base::Info> base_info, EngineMode mode) {
-                this->base_info = base_info;
+            Engine(std::shared_ptr<Base::Info> info, EngineMode mode) {
+                this->info = info;
                 this->mode = mode;
+
+                this->base_file_path = this->info->data_path.c_str();
+                this->temp_file_path = (this->info->data_path + "temp").c_str();
             }
 
             std::queue<Record> record_queue;

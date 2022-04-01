@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <iostream>
+#include <vector>
 
 #define SET_BIT(BF, N) BF |= 1UL << N;
 #define CLR_BIT(BF, N) BF &= ~(1UL << N)
@@ -14,5 +15,7 @@ std::string trim(const std::string &s);
 
 
 bool prefix(const std::string &a, const std::string &b );
+std::vector<char> int_bytes(int param);
+std::vector<char> long_int_bytes(long long int param);
 
 #endif

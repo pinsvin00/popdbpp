@@ -26,8 +26,8 @@ Base::Record Base::Engine::pop_record() {
     }
 
     Record record = Record();
-    //record.data = std::vector<char>(popped_record.begin(), popped_record.end());
-    record.definition = std::make_shared<RecordDefinition>();
+    record.data = std::vector<char>(popped_record.begin(), popped_record.end());
+    record.definition = this->info->record_definition;
     
     temp_file.close();
     base_file.close();
@@ -47,7 +47,7 @@ void Base::Engine::insert_begin(std::shared_ptr<Record> record) {
 
     std::string buffer;
     while(getline(base_file, buffer)) {
-        temp_file << buffer;
+        temp_file << buffer << std::endl;
     }
 
     temp_file.close();

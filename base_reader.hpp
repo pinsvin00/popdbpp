@@ -56,7 +56,7 @@ namespace Base {
             Reader(std::string definition_path) {
                 this->stream_controller = 0;
                 this->definition_path = definition_path;
-                auto last_dot = definition_path.find_last_of('.');
+                auto last_dot = definition_path.find_last_of('.') + 1;
                 this->base_data_path = definition_path.replace(definition_path.begin() + last_dot, definition_path.end(), "popdb");
             }
     };

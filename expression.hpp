@@ -54,10 +54,6 @@ namespace SEQL {
 
 
         Expression(std::vector<Fragment> fragments);
-        
-        //evaluate constant expressions
-        //then evaluate dynamic expressions, that are based on variables/function
-
     };
 
     class Operator : Fragment {

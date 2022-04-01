@@ -22,3 +22,21 @@ std::string trim(const std::string &s) {
 bool prefix(const std::string &a, const std::string &b ) {
     return (b.compare(0, a.size(), a) == 0);
 }
+
+
+//TODO Implement solution for templates, although its fine as it is
+std::vector<char> int_bytes(int param){
+     std::vector<char> bytes(4);
+     for (int i = 0; i < 4; i++)
+         bytes[3 - i] = (param >> (i * 8));
+     return bytes;
+}
+
+std::vector<char> long_int_bytes(long long int param) {
+    std::vector<char> bytes(8);
+    for (size_t i = 0; i < 8; i++){
+        bytes[7 - i] = (param >> (i * 8));
+    }
+    return bytes;
+    
+}

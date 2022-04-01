@@ -40,8 +40,6 @@ SEQL::Fragment::Fragment(std::string val) {
         return;
     }
 
-
-    
     if(val[0] == '\"' || isdigit(val[0]) ) {
         this->type = LITERAL;
         this->value = val;
@@ -110,12 +108,6 @@ void SEQL::Engine::initialize_keywords() {
 
 void SEQL::Engine::initialize_operators() {
     this->operators["+"] = Operator(2, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
-        // if(args.size() != 2){
-        //     throw std::invalid_argument("SEQL ERROR : + operator requires 2 arguments");
-        // }
-        // if(args[0].type == 0) {
-        //     throw std::invalid_argument("SEQL ERROR : + operator cannot perform operations on type NONE");
-        // }
         if(args[0].type != args[1].type) {
             throw std::invalid_argument("SEQL ERROR : + operator cannot perform addition on 2 different types.");
         }
@@ -161,8 +153,10 @@ void SEQL::Engine::evaluate_expression(const std::string& command) {
     std::vector<Fragment> current_fragments;
     std::string fragment_buffer = "";
 
+    bool reading_string_literal = false;
     for (size_t i = 0; i < command.size(); i++){
-        if(command[i] == ' ') {
+        if(command[i] == '\"') reading_string_literal = !reading_string_literal;
+        else if(command[i] == ' ' && !reading_string_literal) {
             Fragment f = Fragment(fragment_buffer); 
             current_fragments.push_back(f);
             fragment_buffer = "";
@@ -206,7 +200,6 @@ void SEQL::Engine::evaluate_expression(const std::string& command) {
             event.arguments = strings;
             event.type = Base::EventType::InvokeFunction;
             this->base_engine->entry(event);
-            //this->event_dispatch->invoke()
         }
         else {
             stack.push(element);

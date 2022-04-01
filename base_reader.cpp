@@ -33,6 +33,7 @@ Base::Info Base::Reader::load() {
     std::cout << "Loading base on path: " << this->definition_path;
     std::fstream fs;
     fs.open(this->definition_path.c_str(), std::fstream::in | std::fstream::out | std::fstream::app);
+    this->current_info.record_definition.size = 0;
     if(!fs.is_open()) {
         std::cout << "ERR! Failed to open database!" << std::endl;
         return this->current_info;
@@ -66,9 +67,9 @@ void Base::Reader::process_line(std::string line) {
     else {
         if (IS_BIT_SET(this->stream_controller, this->FIELDS_READING_BIT)) {
             RecordField f = RecordField(line);
-            f.nth = this->current_info.fields.size();
-            this->current_info.fields.push_back(f);
-            this->record_field_offset += f.size;
+            f.nth = this->current_info.record_definition.fields.size();
+            this->current_info.record_definition.fields.push_back(f);
+            this->current_info.record_definition.size += f.size;
         }
         else if(IS_BIT_SET( this->stream_controller, this->DEFINITION_READING_BIT) ) {
             Field f = Field(line);

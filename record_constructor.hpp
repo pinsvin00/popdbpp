@@ -5,13 +5,15 @@
 #include <string>
 #include <vector>
 #include "base_common.hpp"
+#include "utils.hpp"
 
 
 namespace Base {
     class RecordConstructor {
         public:
         RecordConstructor() = default;
-        Record construct(std::vector<SEQL::Fragment> arguments);
+        Record construct(RecordDefinition definition,std::vector<SEQL::Fragment> arguments);
+        std::vector<char> Base::RecordConstructor::field_to_bytes(RecordField &field, SEQL::Fragment & frag );
     };
 }
 
