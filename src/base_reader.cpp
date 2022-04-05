@@ -3,7 +3,7 @@
 
 Base::Field::Field(std::string field_raw) {
     size_t i = 0;
-    std::string field_name = "";
+    std::string field_name;
 
     for (; i < field_raw.size(); i++){
         if(field_raw[i] == ':'){
@@ -14,7 +14,7 @@ Base::Field::Field(std::string field_raw) {
     }
     this->name = field_name;
     
-    std::string value = "";
+    std::string value;
     for (; i < field_raw.size(); i++){
         if(field_raw[i] == ' ') {
             this->parameters.push_back(value);
@@ -23,14 +23,14 @@ Base::Field::Field(std::string field_raw) {
         }
         else value += field_raw[i];
     }
-    if(value != "") {
+    if(!value.empty()) {
         this->parameters.push_back(value);
     }
 
 }
 
 Base::Info Base::Reader::load() {
-    std::cout << "Loading base on path: " << this->definition_path;
+    std::cout << "Loading base on path: " << this->definition_path << std::endl;
     std::fstream fs;
     fs.open(this->definition_path.c_str(), std::fstream::in | std::fstream::out | std::fstream::app);
     this->current_info.record_definition.size = 0;
@@ -47,10 +47,11 @@ Base::Info Base::Reader::load() {
     fs.close();
 
     this->current_info.data_path = this->base_data_path;
+    std::cout << "Successfully loaded base" << std::endl;
     return this->current_info;
 }
 
-void Base::Reader::process_line(std::string line) {
+void Base::Reader::process_line(const std::string& line) {
     bool is_markup = prefix(";;", line);
     bool is_terminating = prefix(";;END", line);
 

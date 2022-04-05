@@ -25,7 +25,6 @@ namespace SEQL {
 
     class Variable {
         public:
-
         int type;
         bool is_function;
         bool has_native_code;
@@ -47,14 +46,11 @@ namespace SEQL {
     class Expression {
         public:
         bool valid{};
-        std::vector<std::shared_ptr<Expression>> children;
-        std::vector<Fragment> fragments; 
-        std::shared_ptr<std::vector<Fragment>> fragment_ptr;
-        std::shared_ptr<size_t> iter;
-
+        std::vector<Fragment> fragments;
         void convert_to_rpn();
+        Fragment result;
+
         Expression() = default;
-        Expression(std::shared_ptr<size_t> iter, std::shared_ptr<std::vector<Fragment>> fragments);
     };
 
     class Operator : Fragment {
@@ -65,7 +61,7 @@ namespace SEQL {
         Executor executor;
         Operator() = default;
         Operator(int arg_c, Executor executor) {
-            this->executor = executor;
+            this->executor = std::move(executor);
             this->type = OPERATOR;
             this->argument_count = arg_c;
         }         
@@ -86,15 +82,14 @@ namespace SEQL {
         std::map<std::string, Variable> variables;
         std::map<std::string, Keyword>  keywords;
         std::map<std::string, Operator> operators;
+        std::stack<Expression> expression_stack;
     public:
         Engine() = default;
         std::map<std::string, std::shared_ptr<Base::Engine>> engine_repository;
-        std::stack<Expression> expression_stack;
         void tokenize(const std::string& command);
         void initialize_keywords();
         void initialize_operators();
-        void evaluate(Expression e);
-        void stuff(std::vector<Fragment> fragments);
+        void evaluate(Expression& e);
     };
 
 }

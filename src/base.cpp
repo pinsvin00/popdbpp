@@ -17,10 +17,10 @@ std::fstream Base::Engine::obtain_temp_file_ptr() {
 Base::Record Base::Engine::pop_record() {
     std::fstream temp_file = this->obtain_temp_file_ptr();
     std::fstream base_file = this->obtain_base_file_ptr();
-    std::string popped_record = "";
+    std::string popped_record;
     getline(base_file, popped_record);
     
-    std::string line = "";
+    std::string line;
     while(getline(base_file, line)) {
         temp_file << line << std::endl;
     }

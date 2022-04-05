@@ -9,11 +9,19 @@
 
 
 namespace SEQL {
+
+    enum LiteralType {
+        STRING,
+        NUMBER,
+    };
+
     class Fragment {
         public:
         int type;
+        int literal_type;
+        int priority;
+
         std::string value;
-        int prio;
 
         Fragment() = default;
         Fragment(std::string val);

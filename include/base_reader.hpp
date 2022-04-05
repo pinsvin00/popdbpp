@@ -23,14 +23,12 @@ namespace Base {
             std::string definition_path;
             std::string base_data_path;
             unsigned int stream_controller;
-            unsigned int record_field_offset;
 
 
             Info load();
-            void process_line(std::string line);
-            void read_field(std::string field_line);
+            void process_line(const std::string& line);
             Info current_info;
-            void mutate_stream(std::string markup_name, bool terminating) {
+            void mutate_stream(const std::string& markup_name, bool terminating) {
                 int nth_bit = 0;
                 if(markup_name == "DEFINITION"){
                     nth_bit = DEFINITION_READING_BIT;

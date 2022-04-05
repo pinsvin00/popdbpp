@@ -1,11 +1,5 @@
 #include "../include/expression.hpp"
 
-int oper_prio(std::string oper) {
-    if(oper == "-") return 1;
-    if(oper ==  "/") return 2;
-    return 0;
-}
-
 SEQL::Fragment::Fragment(std::string val) {
     std::map<std::string, int> operator_priority = {
         {"=", 0} , {"+", 1}, {"-", 1}, {"*", 2}, {"{", 0},
@@ -22,25 +16,33 @@ SEQL::Fragment::Fragment(std::string val) {
     if(operator_priority.count(val)) {
         this->type  = OPERATOR;
         this->value = val;
-        this->prio  = operator_priority[val]; 
+        this->priority  = operator_priority[val];
         return;
     }
 
     if(keyword_priority.count(val)) {
         this->type = KEYWORD;
         this->value = val;
-        this->prio = keyword_priority[val];
+        this->priority = keyword_priority[val];
         return;
     }
 
     if(native_func_priority.count(val)) {
         this->type = NATIVE_FUNCTION;
         this->value = val;
-        this->prio = native_func_priority[val];
+        this->priority = native_func_priority[val];
         return;
     }
 
-    if(val[0] == '\"' || isdigit(val[0]) ) {
+    bool is_number = isdigit(val[0]);
+    bool is_string = val[0] == '\"';
+    if(is_number || is_string) {
+        if(is_number) {
+            this->literal_type = NUMBER;
+        }
+        else {
+            this->literal_type = STRING;
+        }
         this->type = LITERAL;
         this->value = val;
         return;
@@ -48,7 +50,6 @@ SEQL::Fragment::Fragment(std::string val) {
 
     this->type = VARIABLE;
     this->value = val;
-    return;
 }
 
 SEQL::Keyword::Keyword(int arg_c, std::function<Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&)> executor)  {
@@ -105,25 +106,27 @@ void SEQL::Engine::initialize_keywords() {
 
 void SEQL::Engine::initialize_operators() {
     this->operators["+"] = Operator(2, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
-        if(args[0].type != args[1].type) {
+        if(args[0].literal_type != args[1].literal_type) {
             throw std::invalid_argument("SEQL ERROR : + operator cannot perform addition on 2 different types.");
         }
 
-        return Fragment(std::to_string( std::stoi(args[0].value) + std::stoi(args[1].value) ));
+        if(args[0].literal_type == STRING) {
+            return Fragment(args[0].value + args[1].value);
+        }
+        else if(args[1].literal_type == NUMBER) {
+            return Fragment(std::to_string( std::stoi(args[0].value) + std::stoi(args[1].value) ));
+        }
+
     });
     this->operators["-"] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
         if(args.size() != 2){
             throw std::invalid_argument("SEQL ERROR : - operator requires 2 arguments");
         }
-        if(args[0].type == 0) {
-            throw std::invalid_argument("SEQL ERROR : - operator cannot perform operations on type NONE");
-        }
-        if(args[0].type != args[1].type) {
+        if(args[0].literal_type != NUMBER || args[1].literal_type != NUMBER) {
             throw std::invalid_argument("SEQL ERROR : - operator cannot perform addition on 2 different types.");
-        } 
+        }
 
-
-        return Fragment(std::to_string( std::stoi(args[0].value) - std::stoi(args[1].value) ));
+        return Fragment(std::to_string( std::stoi(args[1].value) - std::stoi(args[0].value) ));
     });
     this->operators["="] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
         if(args.size() != 2){
@@ -153,7 +156,6 @@ void SEQL::Engine::tokenize(const std::string& command) {
     Expression current_expression;
 
     for (size_t i = 0; i < command.size(); i++){
-
         if (command[i] == ',') {
             auto fragment = Fragment(fragment_buffer);
             current_expression.fragments.push_back(fragment);
@@ -163,6 +165,8 @@ void SEQL::Engine::tokenize(const std::string& command) {
         }
         else if(command[i] == '\"') reading_string_literal = !reading_string_literal;
         else if(command[i] == ' ' && !reading_string_literal) {
+            if(fragment_buffer.empty() || fragment_buffer == " ") continue;
+
             Fragment f = Fragment(fragment_buffer);
             current_expression.fragments.push_back(f);
             fragment_buffer = "";
@@ -180,11 +184,12 @@ void SEQL::Engine::tokenize(const std::string& command) {
     for(auto element : expressions) {
         element.convert_to_rpn();
         this->evaluate(element);
+        this->expression_stack.push(element);
     }
 
 }
 
-void SEQL::Engine::evaluate(Expression e) {
+void SEQL::Engine::evaluate(Expression& e) {
     std::stack<Fragment> stack;
     std::vector<Fragment> output;
 
@@ -202,11 +207,10 @@ void SEQL::Engine::evaluate(Expression e) {
         }
         else if(element.type == NATIVE_FUNCTION) {
             std::vector<Fragment> strings;
-            while(!stack.empty() ) {
-                strings.push_back(stack.top());
-                stack.pop();
+            while( !expression_stack.empty() ) {
+                strings.push_back( expression_stack.top().result );
+                expression_stack.pop();
             }
-            std::reverse(strings.begin(), strings.end());
             Base::FunctionDispatchEvent event (element.value, strings);
             std::string base_name = strings[0].value;
             if(this->engine_repository.count(base_name) == 0) {
@@ -220,20 +224,19 @@ void SEQL::Engine::evaluate(Expression e) {
             stack.push(element);
         }
     }
-    //std::cout << "Hello my value is " << stack.top().value << std::endl;
-}
+    if(stack.empty()) {
+        e.result = Fragment("0");
+    }
+    else {
+        e.result = stack.top();
+    }
 
-SEQL::Expression::Expression(std::shared_ptr<size_t> iter, std::shared_ptr<std::vector<Fragment>> fragments) {
-    this->iter = iter;
-    this->fragment_ptr = fragments;
-    //this->evaluate();
 }
-
 
 void SEQL::Expression::convert_to_rpn() {
     std::vector<Fragment> stack;
     std::vector<Fragment> output;
-    while( this->fragments.size() != 0 )  {
+    while(!this->fragments.empty())  {
         Fragment f = this->fragments[0];
         this->fragments.erase(this->fragments.begin());
         if(f.value == "(") {
@@ -249,7 +252,7 @@ void SEQL::Expression::convert_to_rpn() {
         }
         else if(f.type == OPERATOR || f.type == KEYWORD || f.type == NATIVE_FUNCTION) {
             while(!stack.empty()){
-                if (f.prio > stack.back().prio) break;
+                if (f.priority > stack.back().priority) break;
                 output.push_back(stack.back());
                 stack.pop_back();
             }

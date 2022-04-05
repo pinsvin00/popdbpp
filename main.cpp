@@ -30,8 +30,9 @@ int main() {
 
     seql_engine->engine_repository = base_repository;
     seql_engine->initialize_operators();
-    //seql_engine->tokenize("INSERT_BEGIN test , 2 + 10 , 3 + 10 , \"tEST test\" ");
-    seql_engine->tokenize("2 + 22,3 + 33,4 + 44");
+    seql_engine->initialize_keywords();
+    seql_engine->tokenize("INSERT_BEGIN,test,20 - 9,3 + 10,\"somedata\"");
+    //seql_engine->tokenize("2 + 22 , 3 + 33 , 4 + 44");
 
     return 0;
 }

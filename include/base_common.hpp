@@ -87,7 +87,7 @@ namespace Base {
 
     class Record {
         public:
-        //we should move record definition to the shared_ptr, definetaly
+        //we should move record definition to the shared_ptr, definitely
         RecordDefinition definition;
         std::vector<char> data;
     };
@@ -114,14 +114,14 @@ namespace Base {
         public:
         NativeFunctionIdentifier code;
         FunctionDispatchEvent(std::string function_name, std::vector<SEQL::Fragment> args) {
-            std::map<std::string, int> function_name_identifier = {
+            std::map<std::string, NativeFunctionIdentifier> function_name_identifier = {
                 {"INSERT_BEGIN", INSERT_BEGIN},
                 {"POP", POP},
             };
 
             this->code = Base::NativeFunctionIdentifier::INSERT_BEGIN;
             this->arguments = args;
-            this->type = (Base::EventType) function_name_identifier[function_name];
+            this->function_identifier = function_name_identifier[function_name];
         }
     };
 
