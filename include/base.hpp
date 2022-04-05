@@ -27,9 +27,10 @@ namespace Base {
                 this->temp_file_path = (this->info->data_path + "temp").c_str();
             };
 
-            void entry(Event evnt) {
+            void entry(FunctionDispatchEvent evnt) {
                 Base::RecordConstructor constructor;
                 std::shared_ptr<Record> record = std::make_shared<Record>(constructor.construct( this->info->record_definition, evnt.arguments));
+                
                 if(evnt.function_identifier == INSERT_BEGIN) {
                     this->insert_begin(record);
                 }

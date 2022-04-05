@@ -1,18 +1,18 @@
-#include "base_reader.hpp"
+#include "../include/base_reader.hpp"
 
 
 Base::Field::Field(std::string field_raw) {
     size_t i = 0;
-    std::string name = "";
+    std::string field_name = "";
 
     for (; i < field_raw.size(); i++){
         if(field_raw[i] == ':'){
             i++;
             break;
         } 
-        else name += field_raw[i];
+        else field_name += field_raw[i];
     }
-    this->name = name;
+    this->name = field_name;
     
     std::string value = "";
     for (; i < field_raw.size(); i++){

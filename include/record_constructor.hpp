@@ -13,7 +13,7 @@ namespace Base {
         public:
         RecordConstructor() = default;
         Record construct(RecordDefinition definition,std::vector<SEQL::Fragment> arguments);
-        std::vector<char> Base::RecordConstructor::field_to_bytes(RecordField &field, SEQL::Fragment & frag );
+        std::vector<char> field_to_bytes(RecordField &field, SEQL::Fragment & frag );
     };
 }
 

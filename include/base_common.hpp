@@ -103,16 +103,25 @@ namespace Base {
         public:
         std::vector<SEQL::Fragment> arguments;
         EventType type;
-        NativeFunctionIdentifier function_identifier = INSERT_BEGIN;
+        NativeFunctionIdentifier function_identifier;
+        Event() = default;
+        Event(std::vector<SEQL::Fragment> argument, EventType) {
+
+        }
     };
 
     class FunctionDispatchEvent : public Event {
         public:
         NativeFunctionIdentifier code;
         FunctionDispatchEvent(std::string function_name, std::vector<SEQL::Fragment> args) {
+            std::map<std::string, int> function_name_identifier = {
+                {"INSERT_BEGIN", INSERT_BEGIN},
+                {"POP", POP},
+            };
+
             this->code = Base::NativeFunctionIdentifier::INSERT_BEGIN;
             this->arguments = args;
-            this->type = EventType::InvokeFunction;
+            this->type = (Base::EventType) function_name_identifier[function_name];
         }
     };
 

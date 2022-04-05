@@ -1,4 +1,4 @@
-#include "record_constructor.hpp"
+#include "../include/record_constructor.hpp"
 
 Base::Record Base::RecordConstructor::construct(Base::RecordDefinition record_definition, 
                                                 std::vector<SEQL::Fragment> arguments) {

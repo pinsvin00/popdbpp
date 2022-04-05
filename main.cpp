@@ -1,25 +1,18 @@
-#include <iostream>
+
 #include <string>
-#include <fstream>
-#include <sstream>
-#include "expression.hpp"
-#include "base_reader.hpp"
-#include "base_controller.hpp"
-#include "base.hpp"
+#include "include/expression.hpp"
+#include "include/base_reader.hpp"
+
+#include "include/base.hpp"
 
 using namespace std;
 
 
 /*
 Current issues
--> Statically assigned identifier of function
--> Non implemented in memory base
 -> Validation of given records, type checking
 -> NULL Value
--> Named parameters
--> Multiple databases
-
--> Non extensible base event class
+-> Evalutor fixes
 */
 
 
@@ -28,29 +21,17 @@ int main() {
 
     Base::Reader reader = Base::Reader("dbs/test.def");
     std::shared_ptr<Base::Info> base_information = make_shared<Base::Info>(reader.load());
+
+    std::map<std::string , std::shared_ptr<Base::Engine>> base_repository;
     std::shared_ptr<Base::Engine> base_engine = std::make_shared<Base::Engine>(Base::Engine(base_information, Base::EngineMode::FILE));
-    
     std::shared_ptr<SEQL::Engine> seql_engine = std::make_shared<SEQL::Engine>();
 
-    seql_engine->base_engine = base_engine;
-    seql_engine->evaluate_expression("INSERT_BEGIN test \"4\" \"2022-01-04\" \"Macieksmierdzigownem\"");
+    base_repository["test"] = base_engine;
 
-
-    // ifstream myfile ("test.pop");
-    // std::stringstream ss;
-    // std::string line;
-    // if (myfile.is_open()){
-    //     while ( getline (myfile,line) ){
-    //         ss << line << '\n';
-    //     }
-    //     myfile.close();
-    // }
-
-    // std::string to_execute = ss.str();
-
-    // SEQL::Engine e  = SEQL::Engine();
-    // e.evaluate_expression(to_execute);
-    //e.evaluate_expression(exp2);
+    seql_engine->engine_repository = base_repository;
+    seql_engine->initialize_operators();
+    //seql_engine->tokenize("INSERT_BEGIN test , 2 + 10 , 3 + 10 , \"tEST test\" ");
+    seql_engine->tokenize("2 + 22,3 + 33,4 + 44");
 
     return 0;
 }

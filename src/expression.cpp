@@ -1,4 +1,4 @@
-#include "expression.hpp"
+#include "../include/expression.hpp"
 
 int oper_prio(std::string oper) {
     if(oper == "-") return 1;
@@ -12,11 +12,11 @@ SEQL::Fragment::Fragment(std::string val) {
     };
 
     std::map<std::string, int> keyword_priority = {
-        {"FUN", 1}, {"VAR", 1}
+        {"FUN", 0}, {"VAR", 0}
     };
 
     std::map<std::string, int> native_func_priority = {
-        {"INSERT_BEGIN", 1},
+        {"INSERT_BEGIN", 0},
     };
 
     if(operator_priority.count(val)) {
@@ -46,7 +46,7 @@ SEQL::Fragment::Fragment(std::string val) {
         return;
     }
 
-    this->type = LITERAL;
+    this->type = VARIABLE;
     this->value = val;
     return;
 }
@@ -77,7 +77,6 @@ void SEQL::Engine::initialize_keywords() {
 
     
     this->keywords["VAR"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
-        //jedno argumentowiec : (
         if(args.size() != 1){
             throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
         }
@@ -86,7 +85,6 @@ void SEQL::Engine::initialize_keywords() {
     });
 
     this->keywords["IF"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
-        //jedno argumentowiec : (
         if(args.size() != 1){
             throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
         }
@@ -96,7 +94,6 @@ void SEQL::Engine::initialize_keywords() {
 
 
     this->keywords["FOR"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
-        //jedno argumentowiec : (
         if(args.size() != 1){
             throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
         }
@@ -147,18 +144,27 @@ void SEQL::Engine::initialize_operators() {
         return Fragment(std::string(""));
     });
 }
+void SEQL::Engine::tokenize(const std::string& command) {
 
-
-void SEQL::Engine::evaluate_expression(const std::string& command) {
-    std::vector<Fragment> current_fragments;
-    std::string fragment_buffer = "";
-
+    std::string fragment_buffer;
     bool reading_string_literal = false;
+
+    std::vector<Expression> expressions;
+    Expression current_expression;
+
     for (size_t i = 0; i < command.size(); i++){
-        if(command[i] == '\"') reading_string_literal = !reading_string_literal;
+
+        if (command[i] == ',') {
+            auto fragment = Fragment(fragment_buffer);
+            current_expression.fragments.push_back(fragment);
+            expressions.push_back(current_expression);
+            current_expression = Expression();
+            fragment_buffer = "";
+        }
+        else if(command[i] == '\"') reading_string_literal = !reading_string_literal;
         else if(command[i] == ' ' && !reading_string_literal) {
-            Fragment f = Fragment(fragment_buffer); 
-            current_fragments.push_back(f);
+            Fragment f = Fragment(fragment_buffer);
+            current_expression.fragments.push_back(f);
             fragment_buffer = "";
         }
         else {
@@ -166,17 +172,23 @@ void SEQL::Engine::evaluate_expression(const std::string& command) {
         }
     }
 
-    Fragment f = Fragment(fragment_buffer); 
-    fragment_buffer = "";
-    current_fragments.push_back(f);
 
+    auto fragment = Fragment(fragment_buffer);
+    current_expression.fragments.push_back(fragment);
+    expressions.push_back(current_expression);
+    std::reverse(expressions.begin(), expressions.end());
+    for(auto element : expressions) {
+        element.convert_to_rpn();
+        this->evaluate(element);
+    }
 
-    Expression e = Expression(current_fragments);
-    e.convert_to_rpn();
+}
 
+void SEQL::Engine::evaluate(Expression e) {
     std::stack<Fragment> stack;
     std::vector<Fragment> output;
-    for(auto element : e.fragments) {
+
+    for(const auto &element : e.fragments) {
         if(element.type == OPERATOR) {
             Operator o = this->operators[element.value];
             std::vector<Fragment> args;
@@ -188,29 +200,35 @@ void SEQL::Engine::evaluate_expression(const std::string& command) {
             Fragment f = o.executor(args, this->variables);
             stack.push(f);
         }
-        if(element.type == NATIVE_FUNCTION) {
+        else if(element.type == NATIVE_FUNCTION) {
             std::vector<Fragment> strings;
             while(!stack.empty() ) {
-                //that may be quite problematic, we should limit to taking n arguments
                 strings.push_back(stack.top());
                 stack.pop();
             }
             std::reverse(strings.begin(), strings.end());
-            Base::Event event;
-            event.arguments = strings;
-            event.type = Base::EventType::InvokeFunction;
-            this->base_engine->entry(event);
+            Base::FunctionDispatchEvent event (element.value, strings);
+            std::string base_name = strings[0].value;
+            if(this->engine_repository.count(base_name) == 0) {
+                std::cout << "ERROR! Base doesn't exist." << std::endl;
+                return;
+            }
+            std::shared_ptr <Base::Engine> base = this->engine_repository[base_name];
+            base->entry(event);
         }
         else {
             stack.push(element);
         }
     }
-
-
+    //std::cout << "Hello my value is " << stack.top().value << std::endl;
 }
-SEQL::Expression::Expression(std::vector<Fragment> fragments) {
-    this->fragments = fragments;
+
+SEQL::Expression::Expression(std::shared_ptr<size_t> iter, std::shared_ptr<std::vector<Fragment>> fragments) {
+    this->iter = iter;
+    this->fragment_ptr = fragments;
+    //this->evaluate();
 }
+
 
 void SEQL::Expression::convert_to_rpn() {
     std::vector<Fragment> stack;
@@ -241,13 +259,10 @@ void SEQL::Expression::convert_to_rpn() {
             output.push_back(f);
         }
     }
-
     while(!stack.empty()) {
         Fragment f = stack[stack.size() - 1];
         output.push_back(f);
         stack.pop_back();
     }
-
-    this->fragments = output; 
-
+    this->fragments = output;
 }

@@ -46,14 +46,15 @@ namespace SEQL {
 
     class Expression {
         public:
-        bool valid;
-        std::vector<Fragment> fragments;
+        bool valid{};
+        std::vector<std::shared_ptr<Expression>> children;
+        std::vector<Fragment> fragments; 
+        std::shared_ptr<std::vector<Fragment>> fragment_ptr;
+        std::shared_ptr<size_t> iter;
 
         void convert_to_rpn();
-        Variable evaluate();
-
-
-        Expression(std::vector<Fragment> fragments);
+        Expression() = default;
+        Expression(std::shared_ptr<size_t> iter, std::shared_ptr<std::vector<Fragment>> fragments);
     };
 
     class Operator : Fragment {
@@ -83,14 +84,17 @@ namespace SEQL {
 
     class Engine {
         std::map<std::string, Variable> variables;
-        std::map<std::string, Keyword> keywords;
+        std::map<std::string, Keyword>  keywords;
         std::map<std::string, Operator> operators;
     public:
         Engine() = default;
-        std::shared_ptr<Base::Engine> base_engine;
-        void evaluate_expression(const std::string& command);
+        std::map<std::string, std::shared_ptr<Base::Engine>> engine_repository;
+        std::stack<Expression> expression_stack;
+        void tokenize(const std::string& command);
         void initialize_keywords();
         void initialize_operators();
+        void evaluate(Expression e);
+        void stuff(std::vector<Fragment> fragments);
     };
 
 }
