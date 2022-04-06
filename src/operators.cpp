@@ -8,8 +8,6 @@
 void SEQL::Engine::initialize_keywords() {
     this->keywords["FUN"] = Keyword(-1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
         Function v  = Function();
-        v.is_function = true;
-
         vars[args[0].value] = v;
         for (size_t i = 1; i < args.size() ; i++){
             if(args[i].type != VARIABLE) break;
@@ -22,15 +20,6 @@ void SEQL::Engine::initialize_keywords() {
         return f;
     });
 
-
-    this->keywords["VAR"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
-        if(args.size() != 1){
-            throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
-        }
-        vars[args[0].value] = Variable();
-        return Fragment(args[0].value);
-    });
-
     this->keywords["IF"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
         if(args.size() != 1){
             throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
@@ -39,14 +28,16 @@ void SEQL::Engine::initialize_keywords() {
         return Fragment(args[0].value);
     });
 
-
-    this->keywords["FOR"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+    this->keywords["VAR"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
         if(args.size() != 1){
             throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
         }
         vars[args[0].value] = Variable();
-        return Fragment(args[0].value);
+        Fragment f = Fragment(args[0].value);
+        f.type = VARIABLE;
+        return f;
     });
+
 
 }
 
@@ -84,12 +75,9 @@ void SEQL::Engine::initialize_operators() {
         return Fragment(std::string(""));
     });
 
+}
 
-    this->operators["{"] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
-        if(args.size() != 1){
-            throw std::invalid_argument("SEQL ERROR : { expected statement");
-        }
-
-        return Fragment(std::string(""));
-    });
+SEQL::Engine::Engine() {
+    this->initialize_operators();
+    this->initialize_keywords();
 }

@@ -78,3 +78,30 @@ void Base::Reader::process_line(const std::string& line) {
         }
     }
 }
+
+Base::Reader::Reader(std::string definition_path) {
+    this->stream_controller = 0;
+    this->definition_path = definition_path;
+    auto last_dot = definition_path.find_last_of('.') + 1;
+    this->base_data_path = definition_path.replace(definition_path.begin() + last_dot, definition_path.end(), "popdb");
+}
+
+void Base::Reader::mutate_stream(const std::string &markup_name, bool terminating) {
+    int nth_bit = 0;
+    if(markup_name == "DEFINITION"){
+        nth_bit = DEFINITION_READING_BIT;
+    }
+    else if(markup_name == "FIELDS") {
+        nth_bit = FIELDS_READING_BIT;
+    }
+
+    if(terminating) {
+        if(nth_bit == DEFINITION_READING_BIT) {
+            this->terminate = true;
+        }
+        CLR_BIT(this->stream_controller, nth_bit);
+    }
+    else {
+        SET_BIT(this->stream_controller, nth_bit);
+    }
+}

@@ -12,8 +12,6 @@ namespace Base {
 
     const std::string CHARFIELD = "CHARFIELD";
     const std::string INT = "INT";
-    const std::string DATE = "DATE";
-    const std::string BIGINT = "BIGINT";
 
     class Field {
     public:
@@ -32,11 +30,6 @@ namespace Base {
         std::string data_type;
 
         RecordField(std::string field_raw) : Field(field_raw) {
-
-            if(this->parameters.size() < 2) {
-                throw std::invalid_argument("Record field requires having at least 2 parameters");
-            }
-
             try {
                 this->size = std::stoi(parameters[1]);
                 this->data_type = this->parameters[0];
@@ -103,23 +96,19 @@ namespace Base {
         public:
         std::vector<SEQL::Fragment> arguments;
         EventType type;
-        NativeFunctionIdentifier function_identifier;
         Event() = default;
-        Event(std::vector<SEQL::Fragment> argument, EventType) {
-
-        }
     };
 
     class FunctionDispatchEvent : public Event {
         public:
-        NativeFunctionIdentifier code;
-        FunctionDispatchEvent(std::string function_name, std::vector<SEQL::Fragment> args) {
+        std::vector<SEQL::Fragment> results;
+        NativeFunctionIdentifier function_identifier;
+        FunctionDispatchEvent(const std::string& function_name, std::vector<SEQL::Fragment> args) {
             std::map<std::string, NativeFunctionIdentifier> function_name_identifier = {
                 {"INSERT_BEGIN", INSERT_BEGIN},
                 {"POP", POP},
             };
 
-            this->code = Base::NativeFunctionIdentifier::INSERT_BEGIN;
             this->arguments = args;
             this->function_identifier = function_name_identifier[function_name];
         }

@@ -7,6 +7,7 @@
 #include <vector>
 #include <stack>
 #include "base_common.hpp"
+#include "expression_common.hpp"
 #include "base.hpp"
 
 namespace SEQL {
@@ -21,17 +22,9 @@ namespace SEQL {
         KEYWORD,
         FUNCTION,
         NATIVE_FUNCTION,
+        UNKNOWN,
+        NIL,
     };
-
-    class Variable {
-        public:
-        int type;
-        bool is_function;
-        bool has_native_code;
-        std::string value;
-        std::string name;
-    };
-
     typedef std::function< Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&) > Executor;
     class Function : public Variable {
         public:
@@ -45,7 +38,6 @@ namespace SEQL {
 
     class Expression {
         public:
-        bool valid{};
         std::vector<Fragment> fragments;
         void convert_to_rpn();
         Fragment result;
@@ -56,22 +48,15 @@ namespace SEQL {
     class Operator : Fragment {
         public:
         int argument_count = 0;
-
-        //TODO instead of passing whole engine, lets just pass some fragment of engine that contains needed data
         Executor executor;
         Operator() = default;
-        Operator(int arg_c, Executor executor) {
-            this->executor = std::move(executor);
-            this->type = OPERATOR;
-            this->argument_count = arg_c;
-        }         
+        Operator(int arg_c, Executor executor);
     };
 
     class Keyword : public Fragment {
         public:
-
         Executor executor;
-        int arg_c;
+        int argument_count;
         Keyword() = default;
         Keyword(int arg_c, Executor executor);
     };
@@ -84,9 +69,9 @@ namespace SEQL {
         std::map<std::string, Operator> operators;
         std::stack<Expression> expression_stack;
     public:
-        Engine() = default;
+        Engine();
         std::map<std::string, std::shared_ptr<Base::Engine>> engine_repository;
-        void tokenize(const std::string& command);
+        void execute(const std::string& command);
         void initialize_keywords();
         void initialize_operators();
         void evaluate(Expression& e);

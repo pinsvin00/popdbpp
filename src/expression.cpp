@@ -1,6 +1,6 @@
 #include "../include/expression.hpp"
 
-void SEQL::Engine::tokenize(const std::string& command) {
+void SEQL::Engine::execute(const std::string& command) {
 
     std::string fragment_buffer;
     bool reading_string_literal = false;
@@ -10,7 +10,7 @@ void SEQL::Engine::tokenize(const std::string& command) {
 
     for (size_t i = 0; i < command.size(); i++){
         if (command[i] == ',') {
-            auto fragment = Fragment(fragment_buffer);
+            auto fragment = Fragment(fragment_buffer, this->variables);
             current_expression.fragments.push_back(fragment);
             expressions.push_back(current_expression);
             current_expression = Expression();
@@ -19,8 +19,7 @@ void SEQL::Engine::tokenize(const std::string& command) {
         else if(command[i] == '\"') reading_string_literal = !reading_string_literal;
         else if(command[i] == ' ' && !reading_string_literal) {
             if(fragment_buffer.empty() || fragment_buffer == " ") continue;
-
-            Fragment f = Fragment(fragment_buffer);
+            Fragment f = Fragment(fragment_buffer, this->variables);
             current_expression.fragments.push_back(f);
             fragment_buffer = "";
         }
@@ -30,7 +29,7 @@ void SEQL::Engine::tokenize(const std::string& command) {
     }
 
 
-    auto fragment = Fragment(fragment_buffer);
+    auto fragment = Fragment(fragment_buffer, this->variables);
     current_expression.fragments.push_back(fragment);
     expressions.push_back(current_expression);
     std::reverse(expressions.begin(), expressions.end());
@@ -39,15 +38,27 @@ void SEQL::Engine::tokenize(const std::string& command) {
         this->evaluate(element);
         this->expression_stack.push(element);
     }
-
+    while(!this->expression_stack.empty()) this->expression_stack.pop();
 }
 
 void SEQL::Engine::evaluate(Expression& e) {
     std::stack<Fragment> stack;
     std::vector<Fragment> output;
 
-    for(const auto &element : e.fragments) {
-        if(element.type == OPERATOR) {
+    for(auto &element : e.fragments) {
+        if(element.type == KEYWORD) {
+            Keyword k = this->keywords[element.value];
+            std::vector<Fragment> args;
+            for (size_t i = 0; i < k.argument_count; i++){
+                args.push_back(stack.top());
+                stack.pop();
+            }
+
+            Fragment f = k.executor(args, this->variables);
+            f.type = VARIABLE;
+            stack.push(f);
+        }
+        else if(element.type == OPERATOR) {
             Operator o = this->operators[element.value];
             std::vector<Fragment> args;
             for (size_t i = 0; i < o.argument_count; i++){
@@ -58,6 +69,16 @@ void SEQL::Engine::evaluate(Expression& e) {
             Fragment f = o.executor(args, this->variables);
             stack.push(f);
         }
+        else if(element.type == VARIABLE)  {
+            if(this->variables.count(element.value) == 0) {
+                throw std::invalid_argument("SEQL Error: Variable with such name doesn't exist");
+            }
+            Variable v = this->variables[element.value];
+            element.type = LITERAL;
+            element.literal_type = NUMBER;
+            element.value = v.value;
+            stack.push(element);
+        }
         else if(element.type == NATIVE_FUNCTION) {
             std::vector<Fragment> strings;
             while( !expression_stack.empty() ) {
@@ -67,8 +88,7 @@ void SEQL::Engine::evaluate(Expression& e) {
             Base::FunctionDispatchEvent event (element.value, strings);
             std::string base_name = strings[0].value;
             if(this->engine_repository.count(base_name) == 0) {
-                std::cout << "ERROR! Base doesn't exist." << std::endl;
-                return;
+                throw std::invalid_argument("SEQL Error: Base " + base_name + " doesn't exist.");
             }
             std::shared_ptr <Base::Engine> base = this->engine_repository[base_name];
             base->entry(event);
@@ -78,7 +98,7 @@ void SEQL::Engine::evaluate(Expression& e) {
         }
     }
     if(stack.empty()) {
-        e.result = Fragment("0");
+        e.result = Fragment("NULL");
     }
     else {
         e.result = stack.top();
@@ -121,4 +141,10 @@ void SEQL::Expression::convert_to_rpn() {
         stack.pop_back();
     }
     this->fragments = output;
+}
+
+SEQL::Operator::Operator(int arg_c, SEQL::Executor executor)  {
+    this->executor = std::move(executor);
+    this->type = OPERATOR;
+    this->argument_count = arg_c;
 }

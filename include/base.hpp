@@ -2,10 +2,12 @@
 #define BASE_H
 
 #include <iostream>
+#include <utility>
 #include <vector>
 #include <memory>
 #include <fstream>
 #include <queue>
+#include <map>
 #include "base_common.hpp"
 #include "record_constructor.hpp"
 
@@ -16,53 +18,24 @@ namespace Base {
     };
     class Engine {
         std::shared_ptr<Base::Info> info;
-        EngineMode mode;
+        EngineMode mode = EngineMode::MEMORY;
 
         std::string temp_file_path;
         std::string base_file_path;
-
         public:
-            Engine() {
-                this->base_file_path = this->info->data_path.c_str();
-                this->temp_file_path = (this->info->data_path + "temp").c_str();
-            };
-
-            void entry(FunctionDispatchEvent evnt) {
-                Base::RecordConstructor constructor;
-                std::shared_ptr<Record> record = std::make_shared<Record>(constructor.construct( this->info->record_definition, evnt.arguments));
-                
-                if(evnt.function_identifier == INSERT_BEGIN) {
-                    this->insert_begin(record);
-                }
-                if(evnt.function_identifier == POP) {
-                    Record record = this->pop_record();
-                }
-            }
-
-
-            Engine(std::shared_ptr<Base::Info> info, EngineMode mode) {
-                this->info = info;
-                this->mode = mode;
-
-                this->base_file_path = this->info->data_path.c_str();
-                this->temp_file_path = (this->info->data_path + "temp").c_str();
-            }
-
-            std::queue<Record> record_queue;
-            std::fstream obtain_base_file_ptr();
-            std::fstream obtain_temp_file_ptr();
-
-            void swap_buffer_file() {
-                remove(this->base_file_path.c_str());
-                rename(this->temp_file_path.c_str(), this->base_file_path.c_str());
-            };
-
-            Record pop_record();
-            Record pop_nth(size_t nth);
-            Record select_nth(size_t nth);
-            Record delete_nth(size_t nth);
-            void   insert_begin(std::shared_ptr<Record> record);
-            void   insert(std::shared_ptr<Record> record);
+        std::map<std::string, std::string> record_to_map(const Record& record);
+        Engine() = default;
+        void entry(FunctionDispatchEvent event);
+        Engine(std::shared_ptr<Base::Info> info, EngineMode mode);
+        std::fstream obtain_base_file_ptr();
+        std::fstream obtain_temp_file_ptr();
+        void swap_buffer_file();
+        Record pop_record();
+        Record pop_nth(size_t nth);
+        Record select_nth(size_t nth);
+        Record delete_nth(size_t nth);
+        void   insert_begin(std::shared_ptr<Record> record);
+        void   insert(std::shared_ptr<Record> record);
     };
 
     class InMemoryEngine : public Engine {

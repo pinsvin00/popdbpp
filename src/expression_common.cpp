@@ -3,9 +3,20 @@
 //
 
 #include "../include/expression_common.hpp"
+
+#include <utility>
 #include "../include/expression.hpp"
 
 SEQL::Fragment::Fragment(std::string val) {
+
+
+    if(val == "NIL") {
+        this->type = NIL;
+        this->value = "NIL";
+        this->priority = 0;
+        return;
+    }
+
     std::map<std::string, int> operator_priority = {
             {"=", 0} , {"+", 1}, {"-", 1}, {"*", 2}, {"{", 0},
     };
@@ -53,12 +64,18 @@ SEQL::Fragment::Fragment(std::string val) {
         return;
     }
 
-    this->type = VARIABLE;
+    this->type = UNKNOWN;
     this->value = val;
+}
+
+SEQL::Fragment::Fragment(std::string val, const std::map<std::string, SEQL::Variable>& variables) : Fragment(val) {
+    if(variables.count(val) != 0) {
+        this->type = VARIABLE;
+    }
 }
 
 SEQL::Keyword::Keyword(int arg_c, std::function<Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&)> executor)  {
     this->type = KEYWORD;
-    this->executor = executor;
-    this->arg_c = arg_c;
+    this->executor = std::move(executor);
+    this->argument_count = arg_c;
 }

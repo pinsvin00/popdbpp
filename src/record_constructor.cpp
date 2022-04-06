@@ -5,11 +5,14 @@ Base::Record Base::RecordConstructor::construct(Base::RecordDefinition record_de
     std::vector<Base::RecordField> fields = record_definition.fields;
     Base::Record record;
 
+    if(fields.size() != arguments.size() - 1) {
+        throw std::invalid_argument("RecordConstructor : ERROR! too few arguments for the record...");
+    }
 
     std::vector<char> record_byte_arr(record_definition.size);
 
     int record_pointer = 0;
-    //atm lets just omit the first argument, which is db which we are writing to;
+    //omitting first argument, because it is the current database
     for (size_t i = 1; i < arguments.size(); i++){
         SEQL::Fragment element = arguments[i];
         Base::RecordField rf = fields[i-1];
@@ -52,7 +55,7 @@ std::vector<char> Base::RecordConstructor::field_to_bytes(RecordField &field, SE
         return bytes;
     }
     else {
-        std::cout << "Invalid field.data_type :" << std::endl;
+        std::cout << "Unrecognized field type." << std::endl;
         return {};
     }
 

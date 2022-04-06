@@ -34,6 +34,7 @@ Base::Record Base::Engine::pop_record() {
 
     this->swap_buffer_file();
 
+    return record;
 }
 
 void Base::Engine::insert_begin(std::shared_ptr<Record> record) {
@@ -64,4 +65,48 @@ void Base::Engine::insert(std::shared_ptr<Record> record) {
     
     base_file << std::endl;
     base_file.close();
+}
+
+void Base::Engine::entry(Base::FunctionDispatchEvent event) {
+    Base::RecordConstructor constructor;
+    std::shared_ptr<Record> record = std::make_shared<Record>(constructor.construct(this->info->record_definition, event.arguments));
+
+    if(event.function_identifier == INSERT_BEGIN) {
+        this->insert_begin(record);
+    }
+    if(event.function_identifier == POP) {
+        Record popped = this->pop_record();
+    }
+}
+
+void Base::Engine::swap_buffer_file() {
+    remove(this->base_file_path.c_str());
+    rename(this->temp_file_path.c_str(), this->base_file_path.c_str());
+}
+
+std::map<std::string, std::string> Base::Engine::record_to_map(const Base::Record &record)  {
+    RecordDefinition definition =  record.definition;
+    std::map<std::string, std::string> record_map;
+    size_t record_ptr = 0;
+    for(const auto & element : definition.fields) {
+        std::string value;
+        for (int i = 0; i < element.size; i++, record_ptr++) {
+            if(record.data[record_ptr] == 0x0) {
+                record_ptr += (element.size - i);
+                break;
+            }
+            value += record.data[i];
+        }
+        record_map[element.name] = value;
+        value.clear();
+    }
+
+    return record_map;
+}
+
+Base::Engine::Engine(std::shared_ptr<Base::Info> info, Base::EngineMode mode)  {
+    this->info = std::move(info);
+    this->mode = mode;
+    this->base_file_path = this->info->data_path;
+    this->temp_file_path = this->info->data_path + "temp";
 }

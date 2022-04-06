@@ -22,41 +22,15 @@ namespace Base {
             bool terminate = false;
             std::string definition_path;
             std::string base_data_path;
-            unsigned int stream_controller;
+            unsigned int stream_controller = 0;
 
 
             Info load();
             void process_line(const std::string& line);
             Info current_info;
-            void mutate_stream(const std::string& markup_name, bool terminating) {
-                int nth_bit = 0;
-                if(markup_name == "DEFINITION"){
-                    nth_bit = DEFINITION_READING_BIT;
-                }
-                else if(markup_name == "FIELDS") {
-                    nth_bit = FIELDS_READING_BIT;
-                }
-
-                if(terminating) {
-                    if(nth_bit == DEFINITION_READING_BIT) {
-                        this->terminate = true;
-                    }
-                    CLR_BIT(this->stream_controller, nth_bit);
-                }
-                else {
-                    SET_BIT(this->stream_controller, nth_bit);
-                }
-                return;
-            }
-            Reader() {
-                this->stream_controller = 0;
-            }
-            Reader(std::string definition_path) {
-                this->stream_controller = 0;
-                this->definition_path = definition_path;
-                auto last_dot = definition_path.find_last_of('.') + 1;
-                this->base_data_path = definition_path.replace(definition_path.begin() + last_dot, definition_path.end(), "popdb");
-            }
+            void mutate_stream(const std::string& markup_name, bool terminating);
+            Reader() = default;
+            Reader(std::string definition_path);
     };
 
 

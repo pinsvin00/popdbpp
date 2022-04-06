@@ -15,6 +15,15 @@ namespace SEQL {
         NUMBER,
     };
 
+
+    class Variable {
+    public:
+        int type;
+        std::string value;
+        std::string name;
+    };
+
+
     class Fragment {
         public:
         int type;
@@ -25,7 +34,10 @@ namespace SEQL {
 
         Fragment() = default;
         Fragment(std::string val);
+        Fragment(std::string val, const std::map<std::string, SEQL::Variable>& variables);
     };
+
+
 }
 
 #endif
