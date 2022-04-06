@@ -34,6 +34,9 @@ namespace Base {
                 if(evnt.function_identifier == INSERT_BEGIN) {
                     this->insert_begin(record);
                 }
+                if(evnt.function_identifier == POP) {
+                    Record record = this->pop_record();
+                }
             }
 
 

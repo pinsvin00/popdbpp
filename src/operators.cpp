@@ -1,0 +1,95 @@
+//
+// Created by pnsv0 on 06.04.2022.
+//
+
+#include "../include/expression_common.hpp"
+#include "../include/expression.hpp"
+
+void SEQL::Engine::initialize_keywords() {
+    this->keywords["FUN"] = Keyword(-1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+        Function v  = Function();
+        v.is_function = true;
+
+        vars[args[0].value] = v;
+        for (size_t i = 1; i < args.size() ; i++){
+            if(args[i].type != VARIABLE) break;
+            else v.argument_pattern.push_back(args[i]);
+        }
+
+        Fragment f = Fragment(args[0].value);
+        f.type = FUNCTION;
+
+        return f;
+    });
+
+
+    this->keywords["VAR"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+        if(args.size() != 1){
+            throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
+        }
+        vars[args[0].value] = Variable();
+        return Fragment(args[0].value);
+    });
+
+    this->keywords["IF"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+        if(args.size() != 1){
+            throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
+        }
+        vars[args[0].value] = Variable();
+        return Fragment(args[0].value);
+    });
+
+
+    this->keywords["FOR"] = Keyword(1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+        if(args.size() != 1){
+            throw std::invalid_argument("SEQL ERROR : var operator requires 1 argument");
+        }
+        vars[args[0].value] = Variable();
+        return Fragment(args[0].value);
+    });
+
+}
+
+void SEQL::Engine::initialize_operators() {
+    this->operators["+"] = Operator(2, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
+        if(args[0].literal_type != args[1].literal_type) {
+            throw std::invalid_argument("SEQL ERROR : + operator cannot perform addition on 2 different types.");
+        }
+
+        if(args[0].literal_type == STRING) {
+            return Fragment(args[0].value + args[1].value);
+        }
+        else if(args[1].literal_type == NUMBER) {
+            return Fragment(std::to_string( std::stoi(args[0].value) + std::stoi(args[1].value) ));
+        }
+
+    });
+    this->operators["-"] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
+        if(args.size() != 2){
+            throw std::invalid_argument("SEQL ERROR : - operator requires 2 arguments");
+        }
+        if(args[0].literal_type != NUMBER || args[1].literal_type != NUMBER) {
+            throw std::invalid_argument("SEQL ERROR : - operator cannot perform addition on 2 different types.");
+        }
+
+        return Fragment(std::to_string( std::stoi(args[1].value) - std::stoi(args[0].value) ));
+    });
+    this->operators["="] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
+        if(args.size() != 2){
+            throw std::invalid_argument("SEQL ERROR : = operator requires 2 arguments");
+        }
+        vars[args[1].value].value = args[0].value;
+        vars[args[1].value].type  = args[0].type;
+
+        return Fragment(std::string(""));
+    });
+
+
+    this->operators["{"] = Operator(2, [](std::vector<Fragment> args, std::map<std::string, Variable>& vars) {
+        if(args.size() != 1){
+            throw std::invalid_argument("SEQL ERROR : { expected statement");
+        }
+
+        return Fragment(std::string(""));
+    });
+}
