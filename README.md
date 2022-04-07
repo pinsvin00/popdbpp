@@ -6,11 +6,23 @@ PopDB is provided with simple abstraction layer to the dbs, which is SEQL (Simpl
 ## Compiling
 
 ```
-blah blah
 todo
 ```
 
 ## Definition file
+At the current moment, the definition of DB record supports setting additional fields.
+Each field has to be written like this "NAME:CHARFIELD SIZE"
+```
+;;DEFINITION;;
+    NAME:test
+    MODE:file
+    ;;FIELDS;;
+        ID:CHARFIELD 8
+        DATE:CHARFIELD 64
+        MESSAGE:CHARFIELD 64
+    ;;END_FIELDS;;
+;;END_DEFINITION;;
+```
 
 ## SEQL
 SEQL is provided with commands
