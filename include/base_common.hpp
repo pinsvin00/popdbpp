@@ -88,7 +88,7 @@ namespace Base {
     
 
 
-    enum EventType {
+    enum class EventType {
         InvokeFunction,
     };
 
@@ -105,10 +105,12 @@ namespace Base {
         NativeFunctionIdentifier function_identifier;
         FunctionDispatchEvent(const std::string& function_name, std::vector<SEQL::Fragment> args) {
             std::map<std::string, NativeFunctionIdentifier> function_name_identifier = {
-                {"INSERT_BEGIN", INSERT_BEGIN},
-                {"POP", POP},
+                {"INSERT_BEGIN",    Base::NativeFunctionIdentifier::INSERT_BEGIN},
+                {"INSERT",          Base::NativeFunctionIdentifier::INSERT},
+                {"SELECT_NTH",      Base::NativeFunctionIdentifier::SELECT_NTH},
+                {"DELETE_NTH",      Base::NativeFunctionIdentifier::DELETE_NTH},
+                {"POP",             Base::NativeFunctionIdentifier::POP},
             };
-
             this->arguments = args;
             this->function_identifier = function_name_identifier[function_name];
         }

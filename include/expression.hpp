@@ -9,58 +9,12 @@
 #include "base_common.hpp"
 #include "expression_common.hpp"
 #include "base.hpp"
+#include "Lexer.hpp"
 
 namespace SEQL {
-    enum CommandIdParserError {
+    enum class CommandIdParserError {
         INVALID_COMMAND_TYPE = 1,
     };
-
-    enum FragmentType {
-        LITERAL,
-        OPERATOR,
-        VARIABLE,
-        KEYWORD,
-        FUNCTION,
-        NATIVE_FUNCTION,
-        UNKNOWN,
-        NIL,
-    };
-    typedef std::function< Fragment(const std::vector<Fragment>&, std::map<std::string, Variable>&) > Executor;
-    class Function : public Variable {
-        public:
-        std::vector<Fragment> argument_pattern;
-    };
-
-    class NativeFunction : public Function {
-        Base::NativeFunctionIdentifier code;  
-    };
-
-
-    class Expression {
-        public:
-        std::vector<Fragment> fragments;
-        void convert_to_rpn();
-        Fragment result;
-
-        Expression() = default;
-    };
-
-    class Operator : Fragment {
-        public:
-        int argument_count = 0;
-        Executor executor;
-        Operator() = default;
-        Operator(int arg_c, Executor executor);
-    };
-
-    class Keyword : public Fragment {
-        public:
-        Executor executor;
-        int argument_count;
-        Keyword() = default;
-        Keyword(int arg_c, Executor executor);
-    };
-
 
 
     class Engine {
@@ -68,6 +22,7 @@ namespace SEQL {
         std::map<std::string, Keyword>  keywords;
         std::map<std::string, Operator> operators;
         std::stack<Expression> expression_stack;
+        Lexer lexer;
     public:
         Engine();
         std::map<std::string, std::shared_ptr<Base::Engine>> engine_repository;
@@ -75,6 +30,11 @@ namespace SEQL {
         void initialize_keywords();
         void initialize_operators();
         void evaluate(Expression& e);
+        void build_expression_tree(std::shared_ptr<Expression> expr);
+
+        void evaluate_start(std::shared_ptr<Expression> start_expr);
+
+        void evaluate(std::shared_ptr<Expression> e);
     };
 
 }

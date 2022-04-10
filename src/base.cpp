@@ -71,12 +71,28 @@ void Base::Engine::entry(Base::FunctionDispatchEvent event) {
     Base::RecordConstructor constructor;
     std::shared_ptr<Record> record = std::make_shared<Record>(constructor.construct(this->info->record_definition, event.arguments));
 
-    if(event.function_identifier == INSERT_BEGIN) {
+    if(event.function_identifier == Base::NativeFunctionIdentifier::INSERT_BEGIN) {
         this->insert_begin(record);
     }
-    if(event.function_identifier == POP) {
+    else if(event.function_identifier == Base::NativeFunctionIdentifier::INSERT) {
+        this->insert(record);
+    }
+    else if(event.function_identifier == Base::NativeFunctionIdentifier::SELECT_NTH) {
+        int nth = std::stoi(event.arguments[0].value);
+        Record selected = this->select_nth(nth);
+    }
+    else if(event.function_identifier == Base::NativeFunctionIdentifier::DELETE_NTH) {
+        int nth = std::stoi(event.arguments[0].value);
+        this->delete_nth(nth);
+    }
+    else if(event.function_identifier == Base::NativeFunctionIdentifier::POP_NTH) {
+        int nth = std::stoi(event.arguments[0].value);
+        Record popped = this->pop_nth(nth);
+    }
+    else if(event.function_identifier == Base::NativeFunctionIdentifier::POP) {
         Record popped = this->pop_record();
     }
+    std::cout << "Success!" << std::endl;
 }
 
 void Base::Engine::swap_buffer_file() {
@@ -104,9 +120,24 @@ std::map<std::string, std::string> Base::Engine::record_to_map(const Base::Recor
     return record_map;
 }
 
+
+Base::Record Base::Engine::delete_nth(size_t nth) {
+    return Base::Record();
+}
+
+Base::Record Base::Engine::select_nth(size_t nth) {
+    return Base::Record();
+}
+
+Base::Record Base::Engine::pop_nth(size_t nth) {
+    return Base::Record();
+}
+
+
 Base::Engine::Engine(std::shared_ptr<Base::Info> info, Base::EngineMode mode)  {
     this->info = std::move(info);
     this->mode = mode;
     this->base_file_path = this->info->data_path;
     this->temp_file_path = this->info->data_path + "temp";
 }
+

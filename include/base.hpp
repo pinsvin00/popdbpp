@@ -12,7 +12,7 @@
 #include "record_constructor.hpp"
 
 namespace Base {
-    enum EngineMode {
+    enum class EngineMode {
         MEMORY, 
         FILE,
     };

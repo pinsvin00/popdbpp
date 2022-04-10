@@ -19,11 +19,10 @@ namespace Base {
 
             const int DEFINITION_READING_BIT = 0;
             const int FIELDS_READING_BIT = 1;
-            bool terminate = false;
+            unsigned int stream_controller = 0;
             std::string definition_path;
             std::string base_data_path;
-            unsigned int stream_controller = 0;
-
+            bool terminate = false;
 
             Info load();
             void process_line(const std::string& line);

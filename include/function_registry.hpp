@@ -6,10 +6,10 @@
 #include <string>
 
 namespace Base {
-    enum NativeFunctionIdentifier {
+    enum class NativeFunctionIdentifier {
         INSERT_BEGIN,
         INSERT,
-        SELECT,
+        SELECT_NTH,
         POP,
         POP_NTH,
         DELETE_NTH,
