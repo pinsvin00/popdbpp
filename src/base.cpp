@@ -54,7 +54,7 @@ void Base::Engine::insert_begin(std::shared_ptr<Record> record) {
     temp_file.close();
     base_file.close();
 
-    this->swap_buffer_file();
+    //this->swap_buffer_file();
 }
 
 void Base::Engine::insert(std::shared_ptr<Record> record) {

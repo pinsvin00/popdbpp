@@ -26,15 +26,22 @@ namespace SEQL {
     public:
         Engine();
         std::map<std::string, std::shared_ptr<Base::Engine>> engine_repository;
+
         void execute(const std::string& command);
+
         void initialize_keywords();
+
         void initialize_operators();
+
         void evaluate(Expression& e);
-        void build_expression_tree(std::shared_ptr<Expression> expr);
 
         void evaluate_start(std::shared_ptr<Expression> start_expr);
 
         void evaluate(std::shared_ptr<Expression> e);
+
+        void determine_variables(std::shared_ptr<Expression> expression);
+
+        void build_expression_tree(std::shared_ptr<Expression> expr, std::vector<Fragment> fragments);
     };
 
 }

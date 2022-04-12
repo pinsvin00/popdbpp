@@ -18,10 +18,9 @@ int main() {
 
     base_repository["test"] = testBase;
     seql_engine->engine_repository = base_repository;
-    1 + 2, 1 + 3;
     seql_engine->execute("VAR funny = 548");
     seql_engine->execute("VAR monke = funny + 200 * 2");
-    seql_engine->execute("INSERT_BEGIN ( test , monke - funny , 3 + 10 , \"somedata\" )");
+    seql_engine->execute("INSERT_BEGIN test ( monke - funny , 3 + 10 , \"somedata\" )");
     std::map<std::string, std::string> record
         = testBase->record_to_map( testBase->pop_record() );
 
