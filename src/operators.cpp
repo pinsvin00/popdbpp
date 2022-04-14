@@ -5,6 +5,7 @@
 #include "../include/expression_common.hpp"
 #include "../include/expression.hpp"
 
+
 void SEQL::Engine::initialize_keywords() {
     this->keywords["FUN"] = Keyword(-1, [](const std::vector<Fragment>& args, std::map<std::string, Variable>& vars) {
         Function v  = Function();

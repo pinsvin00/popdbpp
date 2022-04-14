@@ -14,7 +14,13 @@ std::string rtrim(const std::string &s)
     size_t end = s.find_last_not_of(WHITESPACE);
     return (end == std::string::npos) ? "" : s.substr(0, end + 1);
 }
- 
+
+void debug_log(const std::string & log) {
+#ifdef DEBUG_LOGGING
+    std::cout << "DEBUG LOG : " << log << std::endl;
+#endif
+}
+
 std::string trim(const std::string &s) {
     return rtrim(ltrim(s));
 }
